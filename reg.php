@@ -1,93 +1,101 @@
 <?php
-session_start();
 require_once 'DATABASE/connect.php';
 
-$message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $role = $_POST['role'] ?? 'student'; // Default role
+$db = new Database();
+$conn = $db->getConnection();
 
-    // Validate inputs
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = 'Invalid email format.';
-    } elseif (strlen($password) < 5 || strlen($password) > 20) {
-        $message = 'Password must be between 5 and 20 characters.';
-    } elseif (!preg_match('/^[a-zA-Z0-9]+$/', $username)) {
-        $message = 'Username must be alphanumeric.';
-    } else {
-        // Insert into database without hashing the password
-        $stmt = $conn->prepare('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)');
-        $stmt->bind_param('ssss', $username, $email, $password, $role);
-
-        if ($stmt->execute()) {
-            $message = 'Registration successful!';
-        } else {
-            $message = 'Error: ' . $stmt->error;
-        }
-        $stmt->close();
-    }
-}
-
-// Fetch ENUM values for roles
-$roles = [];
-$sql = "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'role'";
-$result = $conn->query($sql);
-if ($result && $row = $result->fetch_assoc()) {
-    preg_match('/^enum\((.*)\)$/', $row['COLUMN_TYPE'], $matches);
-    if (isset($matches[1])) {
-        $roles = array_map(function($value) {
-            return trim($value, "'");
-        }, explode(',', $matches[1]));
-    }
-}
+// Fetch all roles to populate dropdown
+$roles_result = $conn->query("SELECT id, role_name FROM roles");
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <title>User Registration</title>
 </head>
-<body class="bg-light">
-    <div class="container p-5 d-flex flex-column align-items-center">
-        <?php if ($message): ?>
-            <div class="alert alert-info"><?= htmlspecialchars($message) ?></div>
-        <?php endif; ?>
-        <form method="post" class="form-control mt-5 p-4" style="width:380px; box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;">
-            <div class="text-center mb-4">
-                <h5 class="p-4" style="font-weight: 700;">Create Your Account</h5>
-            </div>
-            <div class="mb-2">
-                <label for="username"><i class="fa fa-user"></i> Username</label>
-                <input type="text" name="username" id="username" class="form-control" required>
-            </div>
-            <div class="mb-2 mt-2">
-                <label for="email"><i class="fa fa-envelope"></i> Email</label>
-                <input type="email" name="email" id="email" class="form-control" required>
-            </div>
-            <div class="mb-2 mt-2">
-                <label for="password"><i class="fa fa-lock"></i> Password</label>
-                <input type="password" name="password" id="password" class="form-control" required>
-            </div>
-            <div class="mb-2 mt-2">
-                <label for="role"><i class="fa fa-user-tag"></i> Role</label>
-                <select name="role" id="role" class="form-control">
-                    <?php foreach ($roles as $role_option): ?>
-                        <option value="<?= htmlspecialchars($role_option) ?>"><?= htmlspecialchars($role_option) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="mb-2 mt-3">
-                <button type="submit" class="btn btn-success w-100" style="font-weight: 600;">Create Account</button>
-            </div>
-            <div class="mb-2 mt-4">
-                <p class="text-center" style="font-weight: 600; color: navy;">Already have an account? <a href="login.php" style="text-decoration: none;">Login</a></p>
-            </div>
-        </form>
-    </div>
+<body>
+    <h2>Register New User</h2>
+    <form action="" method="POST">
+        <label>Username:</label><br/>
+        <input type="text" name="username" required /><br/><br/>
+
+        <label>Email:</label><br/>
+        <input type="email" name="email" required /><br/><br/>
+
+        <label>Password:</label><br/>
+        <input type="password" name="password" required /><br/><br/>
+
+        <label>Role:</label><br/>
+        <select name="role_id" required>
+            <option value="">Select Role</option>
+            <?php while($row = $roles_result->fetch_assoc()) { ?>
+                <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['role_name']) ?></option>
+            <?php } ?>
+        </select><br/><br/>
+
+        <button type="submit">Register</button>
+    </form>
 </body>
 </html>
+<?php
+require_once 'DATABASE/connect.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];   // Plain text password
+    $role_id = (int)$_POST['role_id'];
+
+    // Basic validation (add more as needed)
+    if (empty($username) || empty($email) || empty($password) || !$role_id) {
+        die("All fields are required.");
+    }
+
+    $db = new Database();
+    $conn = $db->getConnection();
+
+    // Check if username or email already exists
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+    $stmt->bind_param("ss", $username, $email);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        die("Username or email already exists.");
+    }
+    $stmt->close();
+
+    // Insert new user with plain text password
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role_id) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("sssi", $username, $email, $password, $role_id);
+
+    if ($stmt->execute()) {
+        // Get first registered user details
+        $result = $conn->query("SELECT u.id, u.username, u.email, r.role_name 
+                               FROM users u 
+                               JOIN roles r ON u.role_id = r.id 
+                               ORDER BY u.id ASC LIMIT 1");
+        $first_user = $result->fetch_assoc();
+
+        echo "<h2>Registration Successful!</h2>";
+        echo "<p>First registered user details:</p>";
+        echo "<ul>";
+        echo "<li>ID: " . htmlspecialchars($first_user['id']) . "</li>";
+        echo "<li>Username: " . htmlspecialchars($first_user['username']) . "</li>";
+        echo "<li>Email: " . htmlspecialchars($first_user['email']) . "</li>";
+        echo "<li>Role: " . htmlspecialchars($first_user['role_name']) . "</li>";
+        echo "</ul>";
+        echo '<a href="register.php">Register another user</a>';
+    } else {
+        echo "Registration failed: " . $stmt->error;
+    }
+
+    $stmt->close();
+    $db->close();
+
+} else {
+    echo "Invalid request method.";
+}
+
+
+
