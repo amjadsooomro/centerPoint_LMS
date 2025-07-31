@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 31, 2025 at 10:23 AM
+-- Generation Time: Jul 31, 2025 at 10:26 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -20,6 +20,31 @@ SET time_zone = "+00:00";
 --
 -- Database: `centerdb`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `roles`
+--
+
+CREATE TABLE `roles` (
+  `id` int(11) NOT NULL,
+  `role_name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`id`, `role_name`) VALUES
+(4, 'accountant'),
+(1, 'admin'),
+(5, 'exam'),
+(8, 'hr'),
+(2, 'manager'),
+(6, 'sro'),
+(7, 'tnd'),
+(3, 'user');
 
 -- --------------------------------------------------------
 
@@ -52,6 +77,13 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `role_id`) VALUES
 --
 
 --
+-- Indexes for table `roles`
+--
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `role_name` (`role_name`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -63,6 +95,12 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `roles`
+--
+ALTER TABLE `roles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`
