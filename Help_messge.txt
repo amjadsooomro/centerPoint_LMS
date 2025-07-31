@@ -1,0 +1,7 @@
+
+=>I was create my website centerPoint 
+=>my datbase name "centerdb"
+=>mydatabase folder name "Database" in "connect.php"
+=>Roles->multi dashboard
+=>Reg.php ->create registration form 
+=>create table "role",and "users" table 

@@ -1,115 +1,84 @@
 <?php
+require_once 'Database/connect.php';
+$db = new Database();
+$conn = $db->getConnection();
+
 session_start();
-require_once 'DATABASE/connect.php';
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-$message = '';
-$success = false;
-
-// Redirect logged-in users away from login page immediately
-if (isset($_SESSION['user_id'])) {
-    $role = strtolower($_SESSION['role_name']);
-    $redirectUrl = "Roles/{$role}_dashboard.php";
-
-    // Check if dashboard exists before redirecting
-    if (file_exists($redirectUrl)) {
-        header("Location: $redirectUrl");
-        exit();
-    } else {
-        // Dashboard file missing: log out user (optional)
-        session_destroy();
-        $message = "Dashboard not found for your role. Please contact admin.";
-    }
-}
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username_or_email = trim($_POST['username_or_email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $username = trim($_POST['username']);
+    $password = $_POST['password'];
 
-    if (empty($username_or_email) || empty($password)) {
-        $message = "Please fill in both fields.";
-    } else {
-        $db = new Database();
-        $conn = $db->getConnection();
+    $stmt = $conn->prepare("
+        SELECT u.id, u.password, r.role_name
+        FROM users u
+        JOIN roles r ON u.role_id = r.id
+        WHERE u.username = ? LIMIT 1
+    ");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->bind_result($userId, $storedPwd, $roleName);
 
-        $stmt = $conn->prepare("SELECT u.id, u.username, u.email, u.password, r.role_name 
-                                FROM users u 
-                                JOIN roles r ON u.role_id = r.id
-                                WHERE u.username = ? OR u.email = ?");
-        $stmt->bind_param("ss", $username_or_email, $username_or_email);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    if ($stmt->fetch()) {
+        if ($password === $storedPwd) {
+            // successful login
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $userId;
+            $_SESSION['role_name'] = $roleName;
+            $stmt->close();
 
-        if ($result->num_rows === 1) {
-            $user = $result->fetch_assoc();
-
-            // Password check (plain text as requested)
-            if ($password === $user['password']) {
-                // Login success - save session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role_name'] = $user['role_name'];
-
-                $success = true;
-                $message = "Login successful! Welcome, " . htmlspecialchars($user['username']) . " (" . htmlspecialchars($user['role_name']) . ")";
-            } else {
-                $message = "Invalid password.";
+            switch ($roleName) {
+                case 'admin':
+                    header('Location: Roles/admin/dashboard.php');
+                    break;
+                case 'manager':
+                    header('Location: Roles/manager/dashboard.php');
+                    break;
+                case 'accountant':
+                    header('Location: Roles/accountant/dashboard.php');
+                    break;
+                case 'exam':
+                    header('Location: Roles/exam/dashboard.php');
+                    break;
+                case 'sro':
+                    header('Location: Roles/sro/dashboard.php');
+                    break;
+                case 'tnd':
+                    header('Location: Roles/tnd/dashboard.php');
+                    break;
+                case 'hr':
+                    header('Location: Roles/hr/dashboard.php');
+                    break;
+                default:
+                    header('Location: Roles/user/dashboard.php');
+                    break;
             }
+            exit;
+            
         } else {
-            $message = "Invalid username/email or password.";
+            $error = 'Invalid password.';
         }
-
-        $stmt->close();
-        $db->close();
+    } else {
+        $error = 'Username not found.';
     }
+    $stmt->close();
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Login</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.4.1/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
+<html>
+<head><meta charset="UTF-8"><title>Login</title></head>
 <body>
-<div class="container mt-5" style="max-width: 400px;">
-    <h2 class="mb-4">Login</h2>
+<h2>Login</h2>
+<?php if (!empty($error)): ?>
+  <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+<?php endif; ?>
 
-    <?php if ($message): ?>
-        <div class="alert <?= $success ? 'alert-success' : 'alert-danger' ?>">
-            <?= htmlspecialchars($message) ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($success): ?>
-        <?php
-        $role = strtolower($_SESSION['role_name']);
-        $dashboardLink = "Roles/{$role}_dashboard.php";
-        ?>
-        <a href="<?= htmlspecialchars($dashboardLink) ?>" class="btn btn-primary w-100">Go to Dashboard</a>
-        <a href="logout.php" class="btn btn-secondary w-100 mt-2">Logout</a>
-    <?php else: ?>
-        <form action="" method="POST" novalidate>
-            <div class="mb-3">
-                <label for="username_or_email" class="form-label">Username or Email:</label>
-                <input type="text" class="form-control" id="username_or_email" name="username_or_email" required
-                       value="<?= isset($_POST['username_or_email']) ? htmlspecialchars($_POST['username_or_email']) : '' ?>">
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label>
-                <input type="password" class="form-control" id="password" name="password" required />
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-    <?php endif; ?>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.4.1/dist/js/bootstrap.bundle.min.js"></script>
+<form method="post" action="">
+  <label>Username: <input type="text" name="username" required></label><br>
+  <label>Password: <input type="password" name="password" required></label><br>
+  <button type="submit">Login</button>
+</form>
 </body>
-</html>
-
+</html
