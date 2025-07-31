@@ -42,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head><meta charset="UTF-8"><title>Register</title></head>
 <body>
-<h2>Register</h2>
+    <h1>centerPoint LMS</h1>
+<h2>Register </h2>
 <?php if (!empty($error)): ?>
   <p style="color:red;"><?=htmlspecialchars($error)?></p>
 <?php elseif (isset($_GET['success'])): ?>
