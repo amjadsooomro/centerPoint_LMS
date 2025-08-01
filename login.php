@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: Roles/accountant/dashboard.php');
                     break;
                 case 'exam':
-                    header('Location: Roles/exam/dashboard.php');
+                    header('Location: Roles/exam_dashboard.php');
                     break;
                 case 'sro':
                     header('Location: Roles/sro/dashboard.php');
