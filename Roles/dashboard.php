@@ -48,7 +48,8 @@
   </style>
 </head>
 
-<body>
+
+<body class="bg-light">
 
   <!-- Header and Sidebar -->
   <?php include("header.php"); ?>
@@ -62,13 +63,13 @@
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     <li class="nav-item">
-      <a class="nav-link" href="labs.php">
+      <a class="nav-link" href="dashboard.php">
         <i class="icon-grid menu-icon"></i>
         <span class="menu-title">Dashboard</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="Examation.php">
+      <a class="nav-link" href="exam.php">
         <i class="icon-grid menu-icon"></i>
         <span class="menu-title">Examation</span>
       </a>
@@ -152,76 +153,97 @@
   </ul>
 </nav>
 
+<?php
+// examination.php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
 
-<!-- Main Container -->
-<div class="container mt-5">
- 
-  <div class="card shadow-sm ">
-    <!-- Top Bar -->
-    <div class="card-header  border-bottom" id="one">
-      <h5 class="mb-0 text-white">Mailing Examination Form</h5>
-    </div>
+include_once '..\Database\connect.php'; 
+$dbObj = new Database();
+$db = $dbObj->getConnection();
 
-    <div class="card-body p-4">
-      <form id="mailForm" enctype="multipart/form-data">
-        <div class="row">
-          <!-- Subject -->
-          <div class="col-md-6 mb-3">
-            <label for="subject" class="form-label">Subject</label>
-            <input type="text" class="form-control" id="subject" name="subject" placeholder="Enter subject" required>
-          </div>
+$stmt = $db->query("
+    SELECT * FROM examination ORDER BY created_at DESC
+");
 
-          <!-- Semester -->
-          <div class="col-md-6 mb-3">
-            <label for="semester" class="form-label">Semester</label>
-            <input type="text" class="form-control" id="semester" name="semester" placeholder="Enter semester" required>
-          </div>
+$statusMsg = '';
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'success') {
+        $statusMsg = '<div class="alert alert-success">✔️ Examination submitted successfully.</div>';
+    }
+}
+?>
 
-          <!-- Instructor -->
-          <div class="col-md-6 mb-3">
-            <label for="instructor" class="form-label">Instructor</label>
-            <input type="text" class="form-control" id="instructor" name="instructor" placeholder="Enter instructor" required>
-          </div>
+<div class="container my-5">
+    <?= $statusMsg ?>
 
-          <!-- Lab -->
-          <div class="col-md-6 mb-3">
-            <label for="lab" class="form-label">Lab</label>
-            <input type="text" class="form-control" id="lab" name="lab" placeholder="Enter lab" required>
-          </div>
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Semester</th>
+          <th>Instructor</th>
+          <th>Lab</th>
+          <th>Date & Time</th>
+          <th>Time Slot</th>
+          <th>Link</th>
+          <th>Attachment</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php $i = 1; while ($row = $stmt->fetch_assoc()): ?>
+          <tr class="<?= $row['status'] ? '' : 'table-secondary' ?>">
+            <td><?= $i++ ?></td>
+            <td><?= htmlspecialchars($row['subject']) ?></td>
+            <td><?= htmlspecialchars($row['semester']) ?></td>
+            <td><?= htmlspecialchars($row['instructor']) ?></td>
+            <td><?= htmlspecialchars($row['lab']) ?></td>
+            <td><?= htmlspecialchars($row['date_time']) ?></td>
+            <td><?= htmlspecialchars($row['time_slot']) ?></td>
+            <td>
+              <?= $row['link_share'] 
+                    ? '<a href="'.htmlspecialchars($row['link_share']).'" target="_blank">[/]</a>' 
+                    : '—' ?>
+            </td>
+            <td>
+              <?= $row['attachment']
+                    ? '<a href="'.htmlspecialchars($row['attachment']).'" target="_blank">📎</a>'
+                    : '—' ?>
+            </td>
+            <td>
+              <?php if ($row['status']): ?>
+                  <a href="toggle_status.php?id=<?= $row['id'] ?>&status=0"
+                     class="btn btn-sm btn-success">Show</a>
+              <?php else: ?>
+                  <a href="toggle_status.php?id=<?= $row['id'] ?>&status=1"
+                     class="btn btn-sm btn-secondary">Hide</a>
+              <?php endif ?>
+            </td>
+            <td>
+              <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+              <a href="delete.php?id=<?= $row['id'] ?>"
+                 onclick="return confirm('Delete this exam record?');"
+                 class="btn btn-sm btn-danger">Delete</a>
+            </td>
+          </tr>
+        <?php endwhile; ?>
 
-          <!-- Date and Time -->
-          <div class="col-md-6 mb-3">
-            <label for="date" class="form-label">Date & Time</label>
-            <input type="datetime-local" class="form-control" id="date" name="date" required>
-          </div>
-
-          <!-- Time Slot -->
-          <div class="col-md-6 mb-3">
-            <label for="time" class="form-label">Time Slot</label>
-            <input type="text" class="form-control" id="time" name="time" placeholder="Enter time slot" required>
-          </div>
-        </div>
-
-        <!-- Message -->
-        <div class="mb-3">
-          <label class="form-label">Message</label>
-          <div id="editor"></div>
-          <input type="hidden" name="messageHtml" id="messageHtml">
-        </div>
-
-        <!-- Attachment -->
-        <div class="mb-3">
-          <label for="attachment" class="form-label">Attach File</label>
-          <input type="file" class="form-control" id="attachment" name="attachment">
-        </div>
-
-        <!-- Submit -->
-        <button type="submit" class="btn btn-primary">Send</button>
-      </form>
-    </div>
-  </div>
+        <?php if ($stmt->num_rows === 0): ?>
+          <tr><td colspan="11" class="text-center">No records</td></tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>

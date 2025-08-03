@@ -31,13 +31,13 @@
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     <li class="nav-item">
-      <a class="nav-link" href="labs.php">
+      <a class="nav-link" href="dashboard.php">
         <i class="icon-grid menu-icon"></i>
         <span class="menu-title">Dashboard</span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" href="Examation.php">
+      <a class="nav-link" href="exam.php">
         <i class="icon-grid menu-icon"></i>
         <span class="menu-title">Examation</span>
       </a>
