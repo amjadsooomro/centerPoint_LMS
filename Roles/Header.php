@@ -112,13 +112,7 @@
     </button>
   </div>
 </nav>
-<?
 
-
-   session_start();
-
-
-   ?>
           <!-- partial -->
         </div>
         <!-- main-panel ends -->

@@ -25,6 +25,51 @@
   <link rel="shortcut icon" href="assets/images/favicon.png" />
 
   <style>
+    <style>
+    /* Table Styles */
+    .table-responsive {
+      font-size: 0.875rem; /* Smaller font size */
+    }
+    .table th, .table td {
+      vertical-align: middle;
+    }
+    .table th {
+      background-color: #f8f9fa;
+    }
+    .table td {
+      background-color: #ffffff;
+    }
+    .table td a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .table td a:hover {
+      text-decoration: underline;
+    }
+    .table td i {
+      font-size: 1.2rem;
+    }
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .table-responsive {
+        font-size: 0.75rem;
+      }
+      .table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .table td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+      .table td:last-child {
+        border-bottom: 0;
+      }
+    }
+
     #editor {
       height: 200px;
       background-color: #fff;
@@ -43,6 +88,10 @@
 } 
 
 
+  .table thead th {
+    background-color: #4E6688;
+    color: white; /* Optional: Ensures text is readable */
+  }
 
 
   </style>
@@ -174,20 +223,17 @@ if (isset($_GET['status'])) {
     }
 }
 ?>
-
 <div class="container my-5">
-    <?= $statusMsg ?>
-
-    <table class="table table-bordered table-striped align-middle">
-      <thead class="table-dark">
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+      <thead>
         <tr>
           <th>#</th>
           <th>Subject</th>
-          <th>Semester</th>
           <th>Instructor</th>
-          <th>Lab</th>
           <th>Date & Time</th>
           <th>Time Slot</th>
+          <th>Message</th>
           <th>Link</th>
           <th>Attachment</th>
           <th>Status</th>
@@ -195,49 +241,59 @@ if (isset($_GET['status'])) {
         </tr>
       </thead>
       <tbody>
-        <?php $i = 1; while ($row = $stmt->fetch_assoc()): ?>
-          <tr class="<?= $row['status'] ? '' : 'table-secondary' ?>">
+        <?php
+        // Fetch records from the database
+        $stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
+        $i = 1;
+        while ($row = $stmt->fetch_assoc()):
+        ?>
+          <tr>
             <td><?= $i++ ?></td>
             <td><?= htmlspecialchars($row['subject']) ?></td>
-            <td><?= htmlspecialchars($row['semester']) ?></td>
             <td><?= htmlspecialchars($row['instructor']) ?></td>
-            <td><?= htmlspecialchars($row['lab']) ?></td>
             <td><?= htmlspecialchars($row['date_time']) ?></td>
             <td><?= htmlspecialchars($row['time_slot']) ?></td>
+            <td><?= htmlspecialchars($row['message']) ?></td>
             <td>
-              <?= $row['link_share'] 
-                    ? '<a href="'.htmlspecialchars($row['link_share']).'" target="_blank">[/]</a>' 
-                    : '—' ?>
+              <?php if ($row['link_share']): ?>
+                <a href="<?= htmlspecialchars($row['link_share']) ?>" target="_blank">
+                  <i class="fa fa-link"></i>
+                </a>
+              <?php else: ?>
+                —
+              <?php endif; ?>
             </td>
             <td>
-              <?= $row['attachment']
-                    ? '<a href="'.htmlspecialchars($row['attachment']).'" target="_blank">📎</a>'
-                    : '—' ?>
+              <?php if ($row['attachment']): ?>
+                <a href="<?= htmlspecialchars($row['attachment']) ?>" target="_blank">
+                  <i class="fa fa-paperclip"></i>
+                </a>
+              <?php else: ?>
+                —
+              <?php endif; ?>
             </td>
             <td>
               <?php if ($row['status']): ?>
-                  <a href="toggle_status.php?id=<?= $row['id'] ?>&status=0"
-                     class="btn btn-sm btn-success">Show</a>
+                <span class="badge bg-success">Active</span>
               <?php else: ?>
-                  <a href="toggle_status.php?id=<?= $row['id'] ?>&status=1"
-                     class="btn btn-sm btn-secondary">Hide</a>
-              <?php endif ?>
+                <span class="badge bg-secondary">Inactive</span>
+              <?php endif; ?>
             </td>
             <td>
-              <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-              <a href="delete.php?id=<?= $row['id'] ?>"
-                 onclick="return confirm('Delete this exam record?');"
-                 class="btn btn-sm btn-danger">Delete</a>
+              <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+                <i class="fa fa-pencil"></i> Edit
+              </a>
+              <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this exam record?');">
+                <i class="fa fa-trash"></i> Delete
+              </a>
             </td>
           </tr>
         <?php endwhile; ?>
-
-        <?php if ($stmt->num_rows === 0): ?>
-          <tr><td colspan="11" class="text-center">No records</td></tr>
-        <?php endif; ?>
       </tbody>
     </table>
+  </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
