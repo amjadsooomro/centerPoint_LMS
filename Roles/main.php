@@ -64,7 +64,11 @@
   <!-- ✅ Top Navigation -->
   <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
-      <a class="navbar-brand" href="#"><i class="mdi mdi-school-outline me-2"></i>E-Learning Portal</a>
+     <a class="navbar-brand d-flex align-items-center" href="#">
+  <img src="Assets/images/a-logo.png" alt="Logo" style="height: 40px; margin-right: 10px;">
+  <span class="fw-bold text-white">E-Learning Portal</span>WEEWE
+</a>
+
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>

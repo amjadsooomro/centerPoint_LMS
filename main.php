@@ -109,28 +109,50 @@
   </style>
   </style>
 </head>
-<body>
+<body background="Assets">
+  
+<!-- ✅ Navbar with White Background, Left Logo, Centered Icons, Shadow -->
+<nav class="navbar navbar-expand-lg shadow-sm py-3" style="background-color: #ffffff;">
+  <div class="container d-flex align-items-center justify-content-between">
 
-  <!-- ✅ Top Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-custom">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="#">🎓 E-Learning</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon text-white"></span>
-      </button>
+    <!-- 🔵 Logo on the Left -->
+    <a class="navbar-brand d-flex align-items-center" href="#">
+      <img src="Assets/images/a-logo.png" alt="Logo" style="height: 320px; width: auto; max-width: 200px; object-fit: contain;">
+    </a>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-home"></i>Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-file-document-box"></i>About</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-book-open-page-variant"></i>Exam</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-account-group"></i>Faculty</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-login"></i>Login</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="mdi mdi-account-plus"></i>Register</a></li>
-        </ul>
-      </div>
+    <!-- 🔄 Navbar Toggler (Mobile) -->
+    <button class="navbar-toggler text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- ⚪ Centered Nav Links -->
+    <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+      <ul class="navbar-nav text-center">
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-home me-1"></i>Home</a>
+        </li>
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-file-document-box me-1"></i>About</a>
+        </li>
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-book-open-page-variant me-1"></i>Exam</a>
+        </li>
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-account-group me-1"></i>Faculty</a>
+        </li>
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-login me-1"></i>Login</a>
+        </li>
+        <li class="nav-item px-3">
+          <a class="nav-link text-dark" href="#"><i class="mdi mdi-account-plus me-1"></i>Register</a>
+        </li>
+      </ul>
     </div>
-  </nav>
+
+  </div>
+</nav>
+
+
 
   <!-- ✅ Hero Section with Gradient Slider -->
   <section class="hero-gradient">
