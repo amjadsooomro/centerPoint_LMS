@@ -25,7 +25,7 @@
   <link rel="shortcut icon" href="assets/images/favicon.png" />
 
   <style>
-    <style>
+
     /* Table Styles */
     .table-responsive {
       font-size: 0.875rem; /* Smaller font size */
@@ -222,77 +222,90 @@ if (isset($_GET['status'])) {
         $statusMsg = '<div class="alert alert-success">✔️ Examination submitted successfully.</div>';
     }
 }
-?>
-<div class="container my-5">
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped">
-      <thead>
+?><div class="container my-5">
+<div class="table-responsive">
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Subject</th>
+        <th>Instructor</th>
+        <th>Date & Time</th>
+        <th>Time Slot</th>
+        <th>Message</th>
+        <th>Link</th>
+        <th>Attachment</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php
+      // Fetch records from the database
+      $stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
+      $i = 1;
+      while ($row = $stmt->fetch_assoc()):
+      ?>
         <tr>
-          <th>#</th>
-          <th>Subject</th>
-          <th>Instructor</th>
-          <th>Date & Time</th>
-          <th>Time Slot</th>
-          <th>Message</th>
-          <th>Link</th>
-          <th>Attachment</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <td><?= $i++ ?></td>
+          <td><?= htmlspecialchars($row['subject']) ?></td>
+          <td><?= htmlspecialchars($row['instructor']) ?></td>
+          <td><?= htmlspecialchars($row['date_time']) ?></td>
+          <td><?= htmlspecialchars($row['time_slot']) ?></td>
+          <td><?= htmlspecialchars($row['message']) ?></td>
+          <td>
+            <?php if ($row['link_share']): ?>
+              <a href="<?= htmlspecialchars($row['link_share']) ?>" target="_blank">
+                <i class="fa fa-link"></i>
+              </a>
+            <?php else: ?>
+              —
+            <?php endif; ?>
+          </td>
+          <td>
+            <?php if ($row['attachment']): ?>
+              <a href="<?= htmlspecialchars($row['attachment']) ?>" target="_blank">
+                <i class="fa fa-paperclip"></i>
+              </a>
+            <?php else: ?>
+              —
+            <?php endif; ?>
+          </td>
+          <td>
+            <?php if ($row['status']): ?>
+              <span class="badge bg-success">Active</span>
+            <?php else: ?>
+              <span class="badge bg-secondary">Inactive</span>
+            <?php endif; ?>
+          </td>
+          <td>
+            <!-- Show / Hide Buttons -->
+            <?php if ($row['status'] == 1): ?>
+              <!-- If status is active, show the "Hide" button -->
+              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=0" class="btn btn-sm btn-warning">
+                <i class="fa fa-eye-slash"></i> Hide
+              </a>
+            <?php else: ?>
+              <!-- If status is inactive, show the "Show" button -->
+              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=1" class="btn btn-sm btn-success">
+                <i class="fa fa-eye"></i> Show
+              </a>
+            <?php endif; ?>
+            <!-- Edit and Delete Buttons -->
+            <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+              <i class="fa fa-pencil"></i> Edit
+            </a>
+            <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this exam record?');">
+              <i class="fa fa-trash"></i> Delete
+            </a>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        <?php
-        // Fetch records from the database
-        $stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
-        $i = 1;
-        while ($row = $stmt->fetch_assoc()):
-        ?>
-          <tr>
-            <td><?= $i++ ?></td>
-            <td><?= htmlspecialchars($row['subject']) ?></td>
-            <td><?= htmlspecialchars($row['instructor']) ?></td>
-            <td><?= htmlspecialchars($row['date_time']) ?></td>
-            <td><?= htmlspecialchars($row['time_slot']) ?></td>
-            <td><?= htmlspecialchars($row['message']) ?></td>
-            <td>
-              <?php if ($row['link_share']): ?>
-                <a href="<?= htmlspecialchars($row['link_share']) ?>" target="_blank">
-                  <i class="fa fa-link"></i>
-                </a>
-              <?php else: ?>
-                —
-              <?php endif; ?>
-            </td>
-            <td>
-              <?php if ($row['attachment']): ?>
-                <a href="<?= htmlspecialchars($row['attachment']) ?>" target="_blank">
-                  <i class="fa fa-paperclip"></i>
-                </a>
-              <?php else: ?>
-                —
-              <?php endif; ?>
-            </td>
-            <td>
-              <?php if ($row['status']): ?>
-                <span class="badge bg-success">Active</span>
-              <?php else: ?>
-                <span class="badge bg-secondary">Inactive</span>
-              <?php endif; ?>
-            </td>
-            <td>
-              <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
-                <i class="fa fa-pencil"></i> Edit
-              </a>
-              <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this exam record?');">
-                <i class="fa fa-trash"></i> Delete
-              </a>
-            </td>
-          </tr>
-        <?php endwhile; ?>
-      </tbody>
-    </table>
-  </div>
+      <?php endwhile; ?>
+    </tbody>
+  </table>
 </div>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
 </body>

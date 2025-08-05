@@ -1,6 +1,6 @@
 <?php
 
-include_once '..\Database\connect.php';
+include_once 'Database\connect.php';
 
 class Examination {
     private mysqli $conn;

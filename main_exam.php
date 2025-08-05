@@ -156,87 +156,78 @@
   </div>
 </nav>
 
+<?php
+// Include the database connection file
+include_once 'Database/connect.php';
+include_once 'Roles/functions.php';
 
+// Create a new instance of the Database class
+$dbObj = new Database();
+$db = $dbObj->getConnection();
 
-  <!-- ✅ Hero Section with Gradient Slider -->
-  <section class="hero-gradient">
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-      <!-- Indicators -->
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
-      </div>
+// Query to fetch the examination records
+$stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
 
-      <!-- Slides -->
-      <div class="carousel-inner text-center">
-        <div class="carousel-item active">
-          <h1>📘 Welcome to E-Learning</h1>
-          <p>Learn anytime, anywhere with expert-led courses</p>
-          <a href="#" class="btn btn-light-outline">Explore Courses</a>
-        </div>
-        <div class="carousel-item">
-          <h1>🎯 Interactive Classes</h1>
-          <p>Live sessions, assignments, and quizzes to boost your skills</p>
-          <a href="#" class="btn btn-light-outline">Join Now</a>
-        </div>
-        <div class="carousel-item">
-          <h1>👩‍🏫 Qualified Instructors</h1>
-          <p>Our faculty is dedicated to your success</p>
-          <a href="#" class="btn btn-light-outline">Meet the Team</a>
-        </div>
-      </div>
+$statusMsg = '';
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'success') {
+        $statusMsg = '<div class="alert alert-success">✔️ Examination submitted successfully.</div>';
+    }
+}
+?>
 
-      <!-- Controls -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
-    </div>
-  </section>
+<!-- HTML and Bootstrap Card Layout to Display Data -->
 
-  <!-- ✅ Main Section -->
-  <div class="container mt-5">
-    <div class="row">
-      <!-- 🔐 Login Form -->
-      <div class="col-md-6 mb-4">
-        <div class="card p-4 bg-white">
-          <h4 class="mb-3 text-primary">🔐 Login</h4>
-          <form action="login.php" method="POST">
-            <div class="mb-3">
-              <label>Email address</label>
-              <input type="email" name="email" class="form-control" placeholder="Enter email" required />
+<div class="container my-5">
+  <?php
+    // Fetch records from the database and display them
+    while ($row = $stmt->fetch_assoc()):
+  ?>
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title"><?= htmlspecialchars($row['subject']) ?></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($row['instructor']) ?></h6>
+            <p class="card-text"><strong>Date & Time:</strong> <?= htmlspecialchars($row['date_time']) ?></p>
+            <p class="card-text"><strong>Time Slot:</strong> <?= htmlspecialchars($row['time_slot']) ?></p>
+            <p class="card-text"><strong>Message:</strong> <?= htmlspecialchars($row['message']) ?></p>
+            <p class="card-text"><strong>Status:</strong> 
+              <?php if ($row['status']): ?>
+                <span class="badge bg-success">Active</span>
+              <?php else: ?>
+                <span class="badge bg-secondary">Inactive</span>
+              <?php endif; ?>
+            </p>
+            <div class="d-flex justify-content-between">
+              <div>
+                <?php if ($row['link_share']): ?>
+                  <a href="<?= htmlspecialchars($row['link_share']) ?>" class="btn btn-sm btn-outline-primary" target="_blank">
+                    <i class="fa fa-link"></i> Link
+                  </a>
+                <?php endif; ?>
+
+                <?php if ($row['attachment']): ?>
+                  <a href="<?= htmlspecialchars($row['attachment']) ?>" class="btn btn-sm btn-outline-secondary" target="_blank">
+                    <i class="fa fa-paperclip"></i> Attachment
+                  </a>
+                <?php endif; ?>
+              </div>
+              <div>
+                <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+                  <i class="fa fa-pencil"></i> Edit
+                </a>
+                <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this exam record?');">
+                  <i class="fa fa-trash"></i> Delete
+                </a>
+              </div>
             </div>
-            <div class="mb-3">
-              <label>Password</label>
-              <input type="password" name="password" class="form-control" placeholder="Password" required />
-            </div>
-            <div class="form-check mb-3">
-              <input type="checkbox" class="form-check-input" id="rememberMe" />
-              <label class="form-check-label" for="rememberMe">Remember me</label>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- 🗒️ Notes Board -->
-      <div class="col-md-6 mb-4">
-        <div class="card p-4 bg-white">
-          <h4 class="mb-3 text-success">🗒️ Notes Board</h4>
-          <ul class="list-group">
-            <li class="list-group-item">📌 Orientation on Monday</li>
-            <li class="list-group-item">📅 Submit exam forms by 10th Aug</li>
-            <li class="list-group-item">📧 Contact admin for password reset</li>
-            <li class="list-group-item">📚 Internal assessments next week</li>
-            <li class="list-group-item">🖥️ Lab schedule updated</li>
-          </ul>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  <?php endwhile; ?>
+</div>
 
   <!-- ✅ Footer (optional) -->
   <footer class="text-center py-3 text-muted" style="background: #F2F2F2;">
