@@ -201,60 +201,62 @@
     </li>
   </ul>
 </nav>
-
 <?php
 // examination.php
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-
-include_once '..\Database\connect.php'; 
+include_once '../Database/connect.php'; 
 $dbObj = new Database();
 $db = $dbObj->getConnection();
 
-$stmt = $db->query("
-    SELECT * FROM examination ORDER BY created_at DESC
-");
-
 $statusMsg = '';
-if (isset($_GET['status'])) {
-    if ($_GET['status'] === 'success') {
-        $statusMsg = '<div class="alert alert-success">✔️ Examination submitted successfully.</div>';
-    }
+if (isset($_GET['status']) && $_GET['status'] === 'success') {
+    $statusMsg = '<div class="alert alert-success">✔️ Status updated successfully.</div>';
 }
-?><div class="container my-5">
-<div class="table-responsive">
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Subject</th>
-        <th>Instructor</th>
-        <th>Date & Time</th>
-        <th>Time Slot</th>
-        <th>Message</th>
-        <th>Link</th>
-        <th>Attachment</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php
-      // Fetch records from the database
-      $stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
-      $i = 1;
-      while ($row = $stmt->fetch_assoc()):
-      ?>
+?>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!DOCTYPE html>
+
+  <h3 class="mb-4">📝 Examination Records</h3>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Semester</th>
+          <th>Instructor</th>
+          <th>Lab</th>
+          <th>Date & Time</th>
+          <th>Time Slot</th>
+          <th>Message</th>
+          <th>Link</th>
+          <th>Attachment</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php
+        $stmt = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
+        $i = 1;
+        while ($row = $stmt->fetch_assoc()):
+        ?>
         <tr>
           <td><?= $i++ ?></td>
           <td><?= htmlspecialchars($row['subject']) ?></td>
+          <td><?= htmlspecialchars($row['semester']) ?></td>
           <td><?= htmlspecialchars($row['instructor']) ?></td>
+          <td><?= htmlspecialchars($row['lab']) ?></td>
           <td><?= htmlspecialchars($row['date_time']) ?></td>
           <td><?= htmlspecialchars($row['time_slot']) ?></td>
           <td><?= htmlspecialchars($row['message']) ?></td>
           <td>
-            <?php if ($row['link_share']): ?>
+            <?php if (!empty($row['link_share'])): ?>
               <a href="<?= htmlspecialchars($row['link_share']) ?>" target="_blank">
                 <i class="fa fa-link"></i>
               </a>
@@ -263,7 +265,7 @@ if (isset($_GET['status'])) {
             <?php endif; ?>
           </td>
           <td>
-            <?php if ($row['attachment']): ?>
+            <?php if (!empty($row['attachment'])): ?>
               <a href="<?= htmlspecialchars($row['attachment']) ?>" target="_blank">
                 <i class="fa fa-paperclip"></i>
               </a>
@@ -272,102 +274,42 @@ if (isset($_GET['status'])) {
             <?php endif; ?>
           </td>
           <td>
-            <?php if ($row['status']): ?>
+            <?php if ($row['status'] == 1): ?>
               <span class="badge bg-success">Active</span>
             <?php else: ?>
-              <span class="badge bg-secondary">Inactive</span>
+              <span class="badge bg-danger">Inactive</span>
             <?php endif; ?>
           </td>
           <td>
-            <!-- Show / Hide Buttons -->
+            <!-- Show / Hide -->
             <?php if ($row['status'] == 1): ?>
-              <!-- If status is active, show the "Hide" button -->
-              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=0" class="btn btn-sm btn-warning">
+              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=0" class="btn btn-sm btn-warning mb-1">
                 <i class="fa fa-eye-slash"></i> Hide
               </a>
             <?php else: ?>
-              <!-- If status is inactive, show the "Show" button -->
-              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=1" class="btn btn-sm btn-success">
+              <a href="toggle_status.php?id=<?= $row['id'] ?>&status=1" class="btn btn-sm btn-success mb-1">
                 <i class="fa fa-eye"></i> Show
               </a>
             <?php endif; ?>
-            <!-- Edit and Delete Buttons -->
-            <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+
+            <!-- Edit -->
+            <a href="edit.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-primary mb-1">
               <i class="fa fa-pencil"></i> Edit
             </a>
-            <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this exam record?');">
+
+            <!-- Delete -->
+            <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger mb-1" onclick="return confirm('Are you sure you want to delete this exam?');">
               <i class="fa fa-trash"></i> Delete
             </a>
           </td>
         </tr>
-      <?php endwhile; ?>
-    </tbody>
-  </table>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
 </div>
-</div>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-
-
-
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
-  <!-- Optional Plugins -->
-  <script src="assets/vendors/js/vendor.bundle.base.js"></script>
-  <script src="assets/vendors/chart.js/chart.umd.js"></script>
-  <script src="assets/vendors/datatables.net/jquery.dataTables.js"></script>
-  <script src="assets/vendors/datatables.net-bs5/dataTables.bootstrap5.js"></script>
-  <script src="assets/js/dataTables.select.min.js"></script>
-
-  <!-- Custom Scripts -->
-  <script src="assets/js/off-canvas.js"></script>
-  <script src="assets/js/template.js"></script>
-  <script src="assets/js/settings.js"></script>
-  <script src="assets/js/todolist.js"></script>
-  <script src="assets/js/jquery.cookie.js" type="text/javascript"></script>
-  <script src="assets/js/dashboard.js"></script>
-
-  <script>
-    const quill = new Quill('#editor', {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline'],
-          ['link', 'image'],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }]
-        ]
-      }
-    });
-
-    document.getElementById('mailForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-
-      // Save message HTML
-      document.getElementById('messageHtml').value = quill.root.innerHTML;
-
-      const formData = new FormData(this);
-
-      // OPTIONAL: send via AJAX
-      // fetch('submit.php', {
-      //   method: 'POST',
-      //   body: formData
-      // }).then(...);
-
-      // For now: just console
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      // Clear form
-      this.reset();
-      quill.root.innerHTML = '';
-    });
-  </script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

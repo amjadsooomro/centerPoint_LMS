@@ -1,6 +1,6 @@
 <?php
 
-include_once 'Database\connect.php';
+require_once __DIR__ . '/../Database/connect.php';
 
 class Examination {
     private mysqli $conn;
@@ -15,104 +15,79 @@ class Examination {
      * Insert a new examination record.
      * Returns the auto-increment ID on success, or false on failure.
      */
-    public function create(
-        string $subject,
-        string $semester,
-        string $instructor,
-        string $lab,
-        string $date_time,
-        string $time_slot,
-        string $message,
-        ?string $attachment = null,  // Optional parameter, can be null
-        ?string $link_share = null,  // Optional parameter, can be null
-        int $status = 1  // Default status is 1 (Visible)
-    ): int|false {
-        // SQL query to insert data into the `examination` table
-        $stmt = $this->conn->prepare("
-            INSERT INTO examination
-              (subject, semester, instructor, lab, date_time, time_slot,
-               message, attachment, link_share, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        
-        // Check if the query was prepared successfully
-        if ($stmt === false) {
-            return false;  // Return false if the preparation failed
-        }
+    public function create( 
+    string $subject,
+    string $semester,
+    string $instructor,
+    string $lab,
+    string $date_time,
+    string $time_slot,
+    string $message,
+    ?string $attachment = null,  // Optional
+    ?string $link_share = null,  // Optional
+    int $status = 1              // Default to active
+): int|false {
+    $stmt = $this->conn->prepare("
+        INSERT INTO examination
+          (subject, semester, instructor, lab, date_time, time_slot,
+           message, attachment, link_share, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
 
-        // Bind the parameters to the prepared statement
-        $stmt->bind_param(
-            'sssssssssi',  // Data types: 9 strings (s), 1 integer (i)
-            $subject,
-            $semester,
-            $instructor,
-            $lab,
-            $date_time,
-            $time_slot,
-            $message,
-            $attachment,
-            $link_share,
-            $status
-        );
+    if ($stmt === false) return false;
 
-        // Execute the query
-        $stmt->execute();
-        
-        // Get the auto-increment ID of the inserted record
-        $insertId = $this->conn->insert_id;
-        
-        // Close the prepared statement
-        $stmt->close();
-        
-        // Return the auto-incremented ID
-        return (int)$insertId;
-    }
+    $stmt->bind_param(
+        'sssssssssi',
+        $subject, $semester, $instructor, $lab, $date_time, $time_slot,
+        $message, $attachment, $link_share, $status
+    );
+
+    $stmt->execute();
+    $insertId = $this->conn->insert_id;
+    $stmt->close();
+
+    return (int)$insertId;
+}
 
     /**
      * Update an existing examination record.
      */
-    public function update(
-        int $id,
-        string $subject,
-        string $semester,
-        string $instructor,
-        string $lab,
-        string $date_time,
-        string $time_slot,
-        string $message,
-        ?string $link_share = null  // Optional parameter
-    ): bool {
-        // SQL query to update a record in the `examination` table
-        $stmt = $this->conn->prepare("
-            UPDATE examination SET
-              subject = ?, semester = ?, instructor = ?, lab = ?,
-              date_time = ?, time_slot = ?, message = ?, link_share = ?
-            WHERE id = ?
-        ");
+   public function update(
+    int $id,
+    string $subject,
+    string $semester,
+    string $instructor,
+    string $lab,
+    string $date_time,
+    string $time_slot,
+    string $message,
+    ?string $link_share = null
+): bool {
+    $stmt = $this->conn->prepare("
+        UPDATE examination SET
+          subject = ?, semester = ?, instructor = ?, lab = ?,
+          date_time = ?, time_slot = ?, message = ?, link_share = ?
+        WHERE id = ?
+    ");
 
-        // Bind the parameters to the prepared statement
-        $stmt->bind_param(
-            'ssssssssi',  // Data types: 8 strings (s), 1 integer (i)
-            $subject,
-            $semester,
-            $instructor,
-            $lab,
-            $date_time,
-            $time_slot,
-            $message,
-            $link_share,
-            $id
-        );
-
-        // Execute the query
-        $stmt->execute();
-        
-        // Close the prepared statement
-        $stmt->close();
-        
-        // Return true if update was successful
-        return true;
+    if ($stmt === false) {
+        error_log("❌ Prepare failed: " . $this->conn->error);
+        return false;
     }
+
+    if (!$stmt->bind_param('ssssssssi', $subject, $semester, $instructor, $lab, $date_time, $time_slot, $message, $link_share, $id)) {
+        error_log("❌ Bind failed: " . $stmt->error);
+        return false;
+    }
+
+    if (!$stmt->execute()) {
+        error_log("❌ Execute failed: " . $stmt->error);
+        return false;
+    }
+
+    $stmt->close();
+    return true;
+}
 
     /**
      * Delete a specific examination record.

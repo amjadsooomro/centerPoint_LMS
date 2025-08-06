@@ -1,5 +1,7 @@
 <?php
 include_once 'functions.php';
+
+include_once '..\Database\connect.php';
 if (!isset($_GET['id']) || !isset($_GET['status'])) {
     die('Invalid request');
 }
