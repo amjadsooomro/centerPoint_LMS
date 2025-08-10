@@ -1,19 +1,29 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+header('Content-Type: application/json');
+
+include_once '../Database/connect.php';
 include_once 'functions.php';
 
-include_once '..\Database\connect.php';
-if (!isset($_GET['id']) || !isset($_GET['status'])) {
-    die('Invalid request');
-}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'], $_POST['status'])) {
+    $id = filter_var($_POST['id'], FILTER_VALIDATE_INT);
+    $status = strtolower($_POST['status']) === 'active' ? 'active' : 'inactive';
 
-$id = (int) $_GET['id'];
-$status = (int) $_GET['status'];
+    if ($id === false || $id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid ID']);
+        exit;
+    }
 
-$exam = new Examination();
-if ($exam->toggleStatus($id, $status)) {
-    header('Location: exam.php?status=success');
+    $exam = new Examination();
+
+    if ($exam->toggleStatus($id, $status)) {
+        echo json_encode(['success' => true, 'message' => 'Status updated']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+    }
     exit;
-} else {
-    echo 'Failed to update status.';
 }
-?>
+
+echo json_encode(['success' => false, 'message' => 'Invalid request']);
+exit;

@@ -61,12 +61,13 @@ class Examination {
     string $date_time,
     string $time_slot,
     string $message,
-    ?string $link_share = null
+    ?string $link_share = null,
+    string $status = 'active' // New status param
 ): bool {
     $stmt = $this->conn->prepare("
         UPDATE examination SET
           subject = ?, semester = ?, instructor = ?, lab = ?,
-          date_time = ?, time_slot = ?, message = ?, link_share = ?
+          date_time = ?, time_slot = ?, message = ?, link_share = ?, status = ?
         WHERE id = ?
     ");
 
@@ -75,7 +76,11 @@ class Examination {
         return false;
     }
 
-    if (!$stmt->bind_param('ssssssssi', $subject, $semester, $instructor, $lab, $date_time, $time_slot, $message, $link_share, $id)) {
+    if (!$stmt->bind_param(
+        'ssssssssssi',
+        $subject, $semester, $instructor, $lab,
+        $date_time, $time_slot, $message, $link_share, $status, $id
+    )) {
         error_log("❌ Bind failed: " . $stmt->error);
         return false;
     }
@@ -112,43 +117,42 @@ class Examination {
     /**
      * Toggle the visibility status of a record.
      * If status is 1, set it to 0; if status is 0, set it to 1.
-     */
-    public function toggleStatus(int $id, int $newStatus): bool {
-        // SQL query to update the status of the record
-        $stmt = $this->conn->prepare("UPDATE examination SET status = ? WHERE id = ?");
-        
-        // Bind the parameters to the prepared statement
-        $stmt->bind_param('ii', $newStatus, $id);
-        
-        // Execute the query
-        $stmt->execute();
-        
-        // Close the prepared statement
-        $stmt->close();
-        
-        // Return true if status was updated
-        return true;
+     */public function toggleStatus(int $id, string $status): bool {
+    $stmt = $this->conn->prepare("UPDATE examination SET status = ? WHERE id = ?");
+    if (!$stmt) {
+        error_log("Prepare failed: " . $this->conn->error);
+        return false;
     }
+    $stmt->bind_param('si', $status, $id);
+    $result = $stmt->execute();
+    if (!$result) {
+        error_log("Execute failed: " . $stmt->error);
+    }
+    $stmt->close();
+    return $result;
+}
+
 
     /**
      * Fetch all examination records.
      */
-    public function fetchAll(): array {
-        // SQL query to fetch all records ordered by creation date
-        $res = $this->conn->query("
-            SELECT id, subject, semester, instructor, lab,
-                   date_time, time_slot, message, attachment, link_share, status, created_at
-            FROM examination
-            ORDER BY created_at DESC
-        ");
-        
-        // Return all records as an associative array
-        return $res->fetch_all(MYSQLI_ASSOC);
+   public function fetchAll(): array {
+    $res = $this->conn->query("
+        SELECT id, subject, semester, instructor, lab,
+               date_time, time_slot, message, attachment, link_share, status, created_at
+        FROM examination
+        ORDER BY created_at DESC
+    ");
+    
+    if (!$res) {
+        // handle error, log or return empty array
+        error_log("Database query failed: " . $this->conn->error);
+        return [];
     }
+    
+    return $res->fetch_all(MYSQLI_ASSOC);
+}
 
-    /**
-     * Fetch a single examination record by its ID.
-     */
     public function fetchOne(int $id): ?array {
         // SQL query to fetch a specific record by its ID
         $stmt = $this->conn->prepare("

@@ -6,7 +6,7 @@ require_once 'Database/connect.php';
 require_once 'Roles/functions.php';
 
 $db = (new Database())->getConnection();
-$result = $db->query("SELECT * FROM examination ORDER BY created_at DESC");
+$result =$db->query("SELECT * FROM examination WHERE status = 'active' ORDER BY created_at DESC");
 
 $statusMsg = '';
 if (isset($_GET['status']) && $_GET['status'] === 'success') {
@@ -116,6 +116,12 @@ if (isset($_GET['status']) && $_GET['status'] === 'success') {
     z-index: 10;
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
+  a.disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
   </style>
 </head>
 <body>
@@ -137,9 +143,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'success') {
         </ul>
       </div>
     </div>
-</nav>
-
-<div class="container mt-4">
+</nav><div class="container mt-4">
   <?= $statusMsg ?? '' ?>
   <div class="row">
     <?php if ($result && $result->num_rows): ?>
@@ -162,6 +166,7 @@ if (isset($_GET['status']) && $_GET['status'] === 'success') {
                 <?= htmlspecialchars($row['subject']) ?> Exam
               </h5>
             </div>
+
             <div class="card-body d-flex flex-column">
               <p>
                 <i class="mdi mdi-calendar-clock-outline mdi-24px icon-blue me-2"></i>
@@ -175,14 +180,15 @@ if (isset($_GET['status']) && $_GET['status'] === 'success') {
                 <i class="mdi mdi-message mdi-24px icon-red me-2"></i>
                 <strong>Message:</strong>
               </p>
+
               <div class="position-relative mb-3">
-                <textarea id="msg-<?= $row['id'] ?>"
-                          class="form-control message-box" readonly><?= htmlspecialchars($row['message'] ?? '') ?></textarea>
+                <textarea id="msg-<?= $row['id'] ?>" class="form-control message-box" readonly><?= htmlspecialchars($row['message'] ?? '') ?></textarea>
                 <button class="btn btn-sm btn-outline-secondary copy-btn"
                         onclick="copyMessage('msg-<?= $row['id'] ?>')">
                   <i class="mdi mdi-content-copy mdi-24px icon-red me-1"></i> Copy
                 </button>
               </div>
+
               <?php if (!empty($row['attachment'])): ?>
                 <p>
                   <i class="mdi mdi-paperclip mdi-24px icon-red me-2"></i>
@@ -192,39 +198,48 @@ if (isset($_GET['status']) && $_GET['status'] === 'success') {
                   </a>
                 </p>
               <?php endif; ?>
+
               <?php if (!empty($row['link_share'])): ?>
                 <p>
                   <i class="mdi mdi-link mdi-24px icon-red me-2"></i>
                   <strong>Shared Link:</strong>
-                  <a href="<?= htmlspecialchars($row['link_share']) ?>" class="btn btn-sm btn-outline-info" target="_blank">
+                  <a href="<?= htmlspecialchars($row['link_share']) ?>" id="ieOnlyLink-<?= $row['id'] ?>" class="btn btn-sm btn-outline-info" target="_blank">
                     <i class="mdi mdi-open-in-new mdi-24px icon-green me-1"></i> Open
                   </a>
                 </p>
+
+                <script>
+                  function isIE() {
+                    return /MSIE |Trident\//.test(window.navigator.userAgent);
+                  }
+
+                  window.onload = function () {
+                    if (isIE()) {
+                      // Auto-open in IE
+                      const url = document.getElementById("ieOnlyLink-<?= $row['id'] ?>").href;
+                      window.open(url, '_blank');
+                    } else {
+                      // Disable for other browsers
+                      const link = document.getElementById("ieOnlyLink-<?= $row['id'] ?>");
+                      link.href = "javascript:void(0)";
+                      link.classList.add("disabled");
+                      link.style.pointerEvents = "none";
+                      link.style.opacity = "0.6";
+                      link.title = "❌ This link only works in Internet Explorer.";
+                    }
+                  };
+                </script>
               <?php endif; ?>
             </div>
           </div>
         </div>
       <?php endwhile; ?>
     <?php else: ?>
-      <div class="col-12"><div class="alert alert-warning">No exam details available.</div></div>
+      <div class="col-12">
+        <div class="alert alert-warning">No exam details available.</div>
+      </div>
     <?php endif; ?>
   </div>
 </div>
-
-<script>
-function copyMessage(id) {
-  const ta = document.getElementById(id);
-  ta.select();
-  document.execCommand('copy');
-  alert('✅ Message copied to clipboard!');
-}
-
-function isIE() {
-  return /MSIE |Trident\//.test(window.navigator.userAgent);
-}
-
-if (!isIE()) {
-  alert('⚠️ This link works best in Internet Explorer or Edge IE mode. Please open it manually.');
-}
-
-</script>
+    </body>
+    </html>
